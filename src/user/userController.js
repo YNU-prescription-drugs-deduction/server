@@ -16,10 +16,10 @@ exports.login = async (req, res) => {
 
     if (await userDAO.isContain({ id, activated })) {
         if (await userDAO.isContain({ id, password, activated })) {
-            const user = await userDAO.getUser({id});
+            const user = await userDAO.getUser({ id });
             const name = user.name;
-            const accessToken = jwt.getToken({id});
-            res.status(200).send({ name, accessToken}); // 로그인 성공
+            const accessToken = jwt.sign({ id });
+            res.status(200).send({ name, accessToken }); // 로그인 성공
         } else {
             res.status(401).send({ message: "mismatch" }); // 로그인 실패: 비밀번호 오류인 경우
         }
