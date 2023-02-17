@@ -20,7 +20,7 @@ exports.item = async (req, res) => {
                 if (activated === "admin") {
                     items = await itemDAO.getItems({});
                 }
-                else if (activated === "user"){
+                else if (activated === "user") {
                     items = await itemDAO.getItems({ userId });
                 }
                 res.status(200).send(items);
@@ -36,4 +36,9 @@ exports.item = async (req, res) => {
     } else { // 유효하지 않은 token
         res.status(401).send({ message: decoded });
     }
+}
+
+exports.status = async (req, res) => {
+    await itemDAO.updateItemStatus(req.body);
+    res.status(200).send({});
 }
