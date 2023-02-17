@@ -6,6 +6,7 @@ exports.item = async (req, res) => {
     const decoded = jwt.verify(token);
     if (decoded.id) { // 유효한 token
         const userId = decoded.id;
+        const activated = decoded.activated;
 
         // item 조회
         if (req.method === 'GET') {
@@ -15,7 +16,13 @@ exports.item = async (req, res) => {
                 res.status(200).send(item);
             }
             else { // 전체 item 조회
-                const items = await itemDAO.getItems({ userId });
+                var items
+                if (activated === "admin") {
+                    items = await itemDAO.getItems({});
+                }
+                else if (activated === "user"){
+                    items = await itemDAO.getItems({ userId });
+                }
                 res.status(200).send(items);
             }
         }
