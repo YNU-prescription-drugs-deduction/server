@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-exports.sign = (payload) => {
+const sign = (payload) => {
     const token = jwt.sign(
         payload,
         process.env.JWT_SECRET_KEY,
@@ -12,19 +12,41 @@ exports.sign = (payload) => {
     return token;
 }
 
-exports.verify = (token) => {
-    var decoded;
-    try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    } catch (err) {
-        console.log('err.message : ' + err.message);
-        if(err.message === 'jwt expired'){ // 만료된 token
-            console.log('expired');
-            return 'expired';
-        } else { // 유효하지 않은 token
-            console.log('invalid');
-            return 'invalid';
-        }
+const verify = (token) => {
+    return new Promise((resolve, reject) => {
+        jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(decoded);
+            }
+        });
+    });
+};
+
+const auth = (req, res, next) => {
+    const authorization = req.headers.authorization;
+
+    if (!authorization) {
+        return res.status(401).send({ message: 'Authorization header is missing' });
     }
-    return decoded;
-}
+
+    const token = authorization.split(' ')[1];
+
+    verify(token)
+        .then((decoded) => {
+            req.user = decoded;
+            next();
+        })
+        .catch((err) => {
+            if (err instanceof jwt.TokenExpiredError) {
+                return res.status(401).send({ message: 'Token has expired' });
+            }
+            if (err instanceof jwt.JsonWebTokenError) {
+                return res.status(401).send({ message: 'Invalid token' });
+            }
+            return res.status(401).send({ message: 'Authorization error' });
+        });
+};
+
+module.exports = { sign, auth };
